@@ -1,14 +1,20 @@
 import scrapy
+from scrapy.spiders import Rule, CrawlSpider
+from scrapy.linkextractors import LinkExtractor
 
 
 class QuoteSpider(scrapy.Spider):
     name = "Quote"
     allowed_domains = ["quotes.toscrape.com"]
     start_urls = ["https://quotes.toscrape.com/"]
+    #rules = [Rule(LinkExtractor(allow= 'page/',deny='/tag'), callback='parse', follow=True)]
+
 
     def parse(self, response):
-        for link_href in response.css("a::attr(href)"):
+        for next_page in response.css("li.next a"):
+            yield response.follow(next_page,self.parse)
+
+        for quote in response.css("div.quote span.text::text"):
             yield{
-                "href": link_href.get()
+                "quote": quote.get()
             }
-              
